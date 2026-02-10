@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mwananchi Business Support System</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;padding:0;text-align:center;background:#f5f5f5;color:#000;transition:all 0.3s}
+body.dark{background:#111;color:#fff}
+body.neon{background:#000;color:#0ff;text-shadow:0 0 5px #0ff}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px;background:#0f9d58;color:#fff}
+header img{height:40px}
+section{padding:20px}
+input,button,textarea{padding:10px;margin:5px;width:200px}
+#snow{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.dashboard-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
+.card{padding:20px;background:#ddd;cursor:pointer;border-radius:8px}
+</style>
+</head>
+<body class="light">
+
+<canvas id="snow"></canvas>
+
+<header>
+<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9IiMwZjlkNTgiLz48dGV4dCB4PSI1MCIgeT0iNjUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNTAiIGZpbGw9IndoaXRlIj5NPC90ZXh0Pjwvc3ZnPg==" alt="Logo">
+<select id="themeSwitcher">
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+<option value="neon">Neon</option>
+</select>
+</header>
+
+<section id="intro">
+<h1>Welcome to MBSS</h1>
+<p>Empowering Kenyan MSMEs</p>
+<button onclick="show('auth')">Join Us</button>
+</section>
+
+<section id="auth" style="display:none">
+<h2>Login</h2>
+<input id="loginEmail" placeholder="Email"><br>
+<input id="loginPass" type="password" placeholder="Password"><br>
+<button onclick="login()">Login</button>
+<hr>
+<h3>Create Account</h3>
+<input id="regUser" placeholder="Username"><br>
+<input id="regEmail" placeholder="Email"><br>
+<input id="regPass" type="password" placeholder="Password"><br>
+<button onclick="register()">Register</button>
+</section>
+
+<section id="dashboard" style="display:none">
+<h2>Dashboard</h2>
+<div class="dashboard-grid">
+<div class="card" onclick="show('seller')">Seller Setup</div>
+<div class="card" onclick="show('search')">Search & Chat</div>
+<div class="card">Settings</div>
+<div class="card" onclick="logout()">Logout</div>
+</div>
+</section>
+
+<section id="seller" style="display:none">
+<h2>Seller Setup</h2>
+<input id="prodName" placeholder="Product Name"><br>
+<input id="prodPrice" placeholder="Price"><br>
+<input id="prodKeys" placeholder="Keywords (comma separated)"><br>
+<button onclick="addProduct()">Add Product</button>
+<ul id="prodList"></ul>
+<button onclick="show('dashboard')">Back</button>
+</section>
+
+<section id="search" style="display:none">
+<h2>Search Products</h2>
+<input id="searchBox" placeholder="Keyword"><br>
+<ul id="results"></ul>
+<h2>Chat</h2>
+<textarea placeholder="Type message"></textarea><br>
+<button onclick="whatsapp()">Agree to Meet (WhatsApp)</button><br>
+<button onclick="show('dashboard')">Back</button>
+</section>
+
+<script>
+// Theme switcher
+document.getElementById("themeSwitcher").addEventListener("change",e=>{
+document.body.className=e.target.value;
+});
+
+// Snow animation
+const c=document.getElementById("snow"),x=c.getContext("2d");
+c.width=innerWidth;c.height=innerHeight;
+let s=[...Array(100)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*3+1}));
+(function f(){x.clearRect(0,0,c.width,c.height);
+s.forEach(a=>{x.beginPath();x.arc(a.x,a.y,a.r,0,7);x.fillStyle="white";x.fill();a.y+=1;if(a.y>c.height)a.y=0;});requestAnimationFrame(f);})();
+
+// Page transitions
+function show(id){
+document.getElementById("intro").style.display="none";
+document.getElementById("auth").style.display="none";
+document.getElementById("dashboard").style.display="none";
+document.getElementById("seller").style.display="none";
+document.getElementById("search").style.display="none";
+document.getElementById(id).style.display="block";
+}
+
+// Fake storage for demo
+let users=[],products=[];
+
+// Register
+function register(){
+let u=document.getElementById("regUser").value;
+let e=document.getElementById("regEmail").value;
+let p=document.getElementById("regPass").value;
+users.push({username:u,email:e,password:p});
+alert("Account created!");
+show('dashboard');
+}
+
+// Login
+function login(){
+let e=document.getElementById("loginEmail").value;
+let p=document.getElementById("loginPass").value;
+let u=users.find(u=>u.email===e && u.password===p);
+if(u){alert("Login successful");show('dashboard');}else{alert("Invalid credentials");}
+}
+
+// Logout
+function logout(){show('intro');}
+
+// Add product
+function addProduct(){
+let n=document.getElementById("prodName").value;
+let pr=document.getElementById("prodPrice").value;
+let k=document.getElementById("prodKeys").value;
+products.push({name:n,price:pr,keys:k});
+renderProducts();
+document.getElementById("prodName").value="";document.getElementById("prodPrice").value="";document.getElementById("prodKeys").value="";
+}
+
+// Render products
+function renderProducts(){
+let list=document.getElementById("prodList");
+list.innerHTML="";
+products.forEach(p=>{let li=document.createElement("li");li.innerText=p.name+" - Ksh "+p.price;list.appendChild(li);});
+}
+
+// Search products
+document.getElementById("searchBox").addEventListener("keyup",function(){
+let q=this.value.toLowerCase();
+let res=document.getElementById("results");res.innerHTML="";
+products.filter(p=>p.keys.toLowerCase().includes(q)).forEach(p=>{
+let li=document.createElement("li");li.innerText=p.name+" - Ksh "+p.price;res.appendChild(li);
+});
+});
+
+// WhatsApp
+function whatsapp(){window.open("https://wa.me/254712345678","_blank");}
+</script>
+</body>
+</html>
